@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Angular Route Switcher
 // @namespace    https://github.com/junyou1998/angular-route-switcher
-// @version      1.0
+// @version      1.1
 // @description      Automatically detects Angular routes and provides a floating UI to switch between them. Works only in Dev Mode (requires window.ng).
 // @description:zh-TW 自動偵測 Angular 路由並提供浮動介面進行切換。僅適用於開發模式 (需要 window.ng)。
 // @author       junyou
@@ -225,6 +225,16 @@
         style.textContent = `
             @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0');
             
+            .backdrop {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100vw;
+                height: 100vh;
+                z-index: ${CONFIG.uiZIndex - 2};
+                display: none;
+            }
+
             .fab {
                 position: fixed;
                 width: 50px;
@@ -366,6 +376,12 @@
             }
         `;
 
+        const backdrop = document.createElement("div");
+        backdrop.className = "backdrop";
+        backdrop.onclick = () => {
+            if (isOpen) toggleMenu();
+        };
+
         const fab = document.createElement("div");
         fab.className = "fab";
         fab.innerHTML =
@@ -411,6 +427,7 @@
         menu.appendChild(ul);
 
         shadow.appendChild(style);
+        shadow.appendChild(backdrop);
         shadow.appendChild(fab);
         shadow.appendChild(menu);
         document.body.appendChild(container);
@@ -567,6 +584,7 @@
         function toggleMenu() {
             isOpen = !isOpen;
             menu.className = isOpen ? "menu open" : "menu";
+            backdrop.style.display = isOpen ? "block" : "none";
 
             if (isOpen) {
                 const rect = fab.getBoundingClientRect();
