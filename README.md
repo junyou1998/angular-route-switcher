@@ -21,7 +21,7 @@
     <br> 請先安裝 UserScript 管理器，例如 **Tampermonkey** 或 **Violentmonkey**。
 2.  Install the script using the link below:
     <br> 點擊下方連結安裝腳本：
-    <br> [Install angular-route-switcher.user.js](https://github.com/junyou1998/angular-route-switcher/raw/main/angular-route-switcher.user.js)
+    <br> [Install from GreasyFork / 前往 GreasyFork 安裝](https://greasyfork.org/scripts/562323-angular-route-switcher)
 3.  Open your local Angular application (e.g., `http://localhost:4200`).
     <br> 開啟您的本機 Angular 應用程式（例如 `http://localhost:4200`）。
 
