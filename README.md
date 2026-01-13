@@ -1,5 +1,3 @@
-<div align="center">
-
 # 🚀 Angular Route Switcher
 
 [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/junyou1998/angular-route-switcher/blob/main/LICENSE)
@@ -9,8 +7,6 @@
 **Angular Route Switcher** is a UserScript tool designed for Angular developers.<br>It automatically detects your application's routes and provides a floating, draggable UI to quickly switch between them.
 
 **Angular Route Switcher** 是一個專為 Angular 開發者設計的 UserScript 工具。<br>它能自動偵測應用程式中的路由，並提供一個可拖曳的懸浮介面，讓您快速切換頁面。
-
-</div>
 
 ---
 
