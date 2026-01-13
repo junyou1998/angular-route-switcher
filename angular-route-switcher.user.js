@@ -1,14 +1,21 @@
 // ==UserScript==
 // @name         Angular Route Switcher
 // @namespace    https://github.com/junyou1998/angular-route-switcher
-// @version      1.3
+// @version      1.4
 // @description      Automatically detects Angular routes and provides a floating UI to switch between them. Works only in Dev Mode (requires window.ng).
 // @description:zh-TW 自動偵測 Angular 路由並提供浮動介面進行切換。僅適用於開發模式 (需要 window.ng)。
 // @author       junyou
 // @match        http://localhost:*/*
 // @match        http://127.0.0.1:*/*
 // @grant        none
+// @icon         https://raw.githubusercontent.com/junyou1998/angular-route-switcher/main/icon.webp
 // @license      MIT
+// @homepageURL  https://github.com/junyou1998/angular-route-switcher
+// @supportURL   https://github.com/junyou1998/angular-route-switcher/issues
+// @updateURL    https://raw.githubusercontent.com/junyou1998/angular-route-switcher/main/angular-route-switcher.user.js
+// @downloadURL  https://raw.githubusercontent.com/junyou1998/angular-route-switcher/main/angular-route-switcher.user.js
+// @run-at       document-idle
+// @noframes
 // ==/UserScript==
 
 (function () {
@@ -20,7 +27,7 @@
         maxPollAttempts: 60,
         uiZIndex: 99999,
         colors: {
-            primary: "#006D50", // Green #006D50
+            primary: "#006D50",
             primaryHover: "#004D38",
             primaryLight: "rgba(0, 109, 80, 0.08)",
             background: "#ffffff",
@@ -449,10 +456,45 @@
         minimizeBtn.title = "Minimize";
         fab.appendChild(minimizeBtn);
 
+        let storedState = null;
+        try {
+            storedState = JSON.parse(localStorage.getItem("ARS_STATE"));
+        } catch (e) {}
+
         let initialTop = window.innerHeight - 80;
         let initialLeft = window.innerWidth - 80;
+        let isMinimized = false;
+        let dockedSide = "right";
+
+        if (storedState) {
+            initialTop =
+                storedState.top !== undefined ? storedState.top : initialTop;
+            initialLeft =
+                storedState.left !== undefined ? storedState.left : initialLeft;
+            isMinimized = !!storedState.isMinimized;
+            dockedSide = storedState.dockedSide || "right";
+        }
+
+        // Validate bounds
+        if (initialTop < 20) initialTop = 20;
+        if (initialTop > window.innerHeight - 70)
+            initialTop = window.innerHeight - 70;
+        if (initialLeft < 0) initialLeft = 0;
+        if (initialLeft > window.innerWidth - 12)
+            initialLeft = window.innerWidth - 50;
+
         fab.style.top = `${initialTop}px`;
         fab.style.left = `${initialLeft}px`;
+
+        if (isMinimized) {
+            fab.classList.add("minimized");
+            // small offset check for minimized
+            if (dockedSide === "right") {
+                fab.style.left = `${window.innerWidth - 12}px`;
+            } else {
+                fab.style.left = "0px";
+            }
+        }
 
         const menu = document.createElement("div");
         menu.className = "menu";
@@ -494,7 +536,18 @@
         document.body.appendChild(container);
 
         let isOpen = false;
-        let isMinimized = false;
+        // isMinimized is already defined above
+
+        // --- Persistence Helper ---
+        function saveState() {
+            const state = {
+                top: parseFloat(fab.style.top),
+                left: parseFloat(fab.style.left),
+                isMinimized: isMinimized,
+                dockedSide: dockedSide,
+            };
+            localStorage.setItem("ARS_STATE", JSON.stringify(state));
+        }
 
         // --- Drag & Drop Logic ---
         let isDragging = false;
@@ -503,8 +556,6 @@
         let hasMoved = false;
 
         // Track which side the FAB is docked to ('left' or 'right')
-        let dockedSide = "right";
-
         fab.addEventListener("mousedown", dragStart);
         document.addEventListener("mousemove", drag);
         document.addEventListener("mouseup", dragEnd);
@@ -526,13 +577,8 @@
 
         minimizeBtn.addEventListener("click", (e) => {
             e.stopPropagation();
-            // toggleMinimize handled by mousedown to likely avoid conflict,
-            // ensuring consistent behavior. Or we can just use click.
-            // Let's use click for safety if mousedown didn't fire (desktop/mobile diffs)
-            // Actually, move toggleMinimize logic here for better reliability across devices
         });
 
-        // Clean up: Let's simpler logic.
         // Remove mousedown/touchstart listeners above and use simple click
         minimizeBtn.onclick = (e) => {
             e.stopPropagation();
@@ -543,6 +589,7 @@
             if (isOpen) toggleMenu(); // Close menu if open
 
             isMinimized = !isMinimized;
+            saveState(); // Save state
 
             if (isMinimized) {
                 fab.classList.add("minimized");
@@ -588,15 +635,6 @@
         }
 
         function dragStart(e) {
-            if (isMinimized) {
-                // If minimized, any click/drag attempt just restores it?
-                // Or allows dragging the pill?
-                // Requirement: "Clicking the small rectangle restores it".
-                // So let's make any interaction on minimized FAB restore it, unless we want to allow dragging pills.
-                // Let's allow dragging pills for positioning, but click restores.
-                // For now, let's stick to standard drag logic, but check minimize state on click.
-            }
-
             if (e.type === "touchstart") e.preventDefault();
 
             fab.classList.remove("snapping");
@@ -658,6 +696,7 @@
                     toggleMenu();
                 }
             }
+            saveState(); // Save position after drag/snap
         }
 
         function snapToEdge(isMin = false) {
