@@ -1,14 +1,14 @@
 // ==UserScript==
 // @name         Angular Route Switcher
 // @namespace    https://github.com/junyou1998/angular-route-switcher
-// @version      1.4.1
+// @version      1.4.2
 // @description      Automatically detects Angular routes and provides a floating UI to switch between them. Works only in Dev Mode (requires window.ng).
 // @description:zh-TW 自動偵測 Angular 路由並提供浮動介面進行切換。僅適用於開發模式 (需要 window.ng)。
 // @author       junyou
 // @match        http://localhost:*/*
 // @match        http://127.0.0.1:*/*
 // @grant        none
-// @icon         https://cdn.jsdelivr.net/gh/junyou1998/angular-route-switcher@main/icon.webp
+// @icon         https://cdn.jsdelivr.net/gh/junyou1998/angular-route-switcher@main/icon.png
 // @license      MIT
 // @homepageURL  https://github.com/junyou1998/angular-route-switcher
 // @supportURL   https://github.com/junyou1998/angular-route-switcher/issues
