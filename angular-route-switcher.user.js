@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Angular Route Switcher
 // @namespace    https://github.com/junyou1998/angular-route-switcher
-// @version      1.4.6
+// @version      1.4.7
 // @description      Automatically detects Angular routes and provides a floating UI to switch between them. Works only in Dev Mode (requires window.ng).
 // @description:zh-TW 自動偵測 Angular 路由並提供浮動介面進行切換。僅適用於開發模式 (需要 window.ng)。
 // @author       junyou
@@ -807,12 +807,12 @@
             backdrop.style.display = isOpen ? "block" : "none";
 
             if (isOpen) {
-                // Use style properties for target position to avoid animation artifacts
+                renderList(routes); // Ensure list is up to date first (for height calc)
 
+                // Use style properties for target position to avoid animation artifacts
                 const fabLeft = parseFloat(fab.style.left);
                 const fabTop = parseFloat(fab.style.top);
                 adjustMenuPosition(fabLeft, fabTop);
-                renderList(routes); // Ensure list is up to date
 
                 if (focusSearch) {
                     searchInput.focus();
@@ -838,11 +838,13 @@
         function adjustMenuPosition(fabLeft, fabTop) {
             const menuWidth = 300;
             const winHeight = window.innerHeight;
-            const menuHeight = Math.min(400, winHeight - 40);
             const winWidth = window.innerWidth;
 
+            // Use actual height (with fallback)
+            const menuHeight = menu.offsetHeight || 100;
+
             let menuLeft = fabLeft - menuWidth - 10;
-            let menuTop = fabTop - menuHeight + 50;
+            let menuTop = fabTop + 50 - menuHeight;
 
             if (fabLeft < winWidth / 2) {
                 menuLeft = fabLeft + 60;

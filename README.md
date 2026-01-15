@@ -18,6 +18,12 @@
     <br> **懸浮拖曳**：提供可拖曳的懸浮按鈕，並支援自動吸附至螢幕邊緣。
 -   **Route Titles**: Displays route titles alongside paths for better clarity.
     <br> **路由標題**：在此清單中同時顯示路由路徑與標題，方便識別。
+-   **Active Route Highlight**: Highlights the current route in the list for easy tracking.
+    <br> **當前路由高亮**：在清單中高亮顯示目前所在的路由，方便辨識。
+-   **Copy Path**: One-click to copy the route path to clipboard.
+    <br> **一鍵複製**：點擊按鈕即可快速複製路由路徑至剪貼簿。
+-   **Keyboard Shortcuts**: Use `Cmd+K` (or `Ctrl+K`) to toggle the menu, and Arrow keys to navigate.
+    <br> **鍵盤快速鍵**：支援 `Cmd+K` (或 `Ctrl+K`) 快速開關選單，並使用方向鍵進行導航。
 -   **Search**: Built-in search bar to filter routes by path or title.
     <br> **快速搜尋**：內建搜尋功能，可透過路徑或標題篩選路由。
 
@@ -39,6 +45,15 @@
     <br> 點擊畫面上的懸浮「探索」圖示以開啟路由清單。
 3.  Click any item to navigate to that route.
     <br> 點擊任一項目即可跳轉至該路由。
+
+### ⌨️ Keyboard Shortcuts / 鍵盤快速鍵
+
+| Shortcut (Mac/Win)     | Action            | 功能            |
+| :--------------------- | :---------------- | :-------------- |
+| `Cmd + K` / `Ctrl + K` | Toggle Menu       | 開啟 / 關閉選單 |
+| `Arrow Up` 使用上鍵    | Focus Previous    | 上一個項目      |
+| `Arrow Down` 使用下鍵  | Focus Next        | 下一個項目      |
+| `Enter`                | Navigate to Route | 跳轉至該路由    |
 
 ### 🛠️ How It Works / 原理與實作
 
