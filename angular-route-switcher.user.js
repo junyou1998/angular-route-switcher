@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Angular Route Switcher
 // @namespace    https://github.com/junyou1998/angular-route-switcher
-// @version      1.4.4
+// @version      1.4.5
 // @description      Automatically detects Angular routes and provides a floating UI to switch between them. Works only in Dev Mode (requires window.ng).
 // @description:zh-TW 自動偵測 Angular 路由並提供浮動介面進行切換。僅適用於開發模式 (需要 window.ng)。
 // @author       junyou
@@ -476,6 +476,11 @@
                 font-weight: bold;
                 border-left: 4px solid ${CONFIG.colors.primary};
             }
+            .route-item:focus {
+                outline: none;
+                background-color: ${CONFIG.colors.primaryLight};
+                border-left: 4px solid ${CONFIG.colors.primary};
+            }
             .copy-btn {
                 position: absolute;
                 right: 10px;
@@ -794,7 +799,7 @@
 
         // --- Menu Logic ---
 
-        function toggleMenu() {
+        function toggleMenu(focusSearch = true) {
             if (isMinimized) return; // Should not happen but safety check
 
             isOpen = !isOpen;
@@ -802,10 +807,31 @@
             backdrop.style.display = isOpen ? "block" : "none";
 
             if (isOpen) {
-                const rect = fab.getBoundingClientRect();
-                adjustMenuPosition(rect.left, rect.top);
-                searchInput.focus();
-                renderList(routes);
+                // Use style properties for target position to avoid animation artifacts
+                // rect would return the mid-transition position
+                const fabLeft = parseFloat(fab.style.left);
+                const fabTop = parseFloat(fab.style.top);
+                adjustMenuPosition(fabLeft, fabTop);
+                renderList(routes); // Ensure list is up to date
+
+                if (focusSearch) {
+                    searchInput.focus();
+                } else {
+                    // Focus on active item or first item
+                    setTimeout(() => {
+                        focusActiveItem();
+                    }, 50); // Small delay to ensure rendering
+                }
+            }
+        }
+
+        function focusActiveItem() {
+            const activeItem = ul.querySelector(".route-item.active");
+            if (activeItem) {
+                activeItem.focus();
+            } else {
+                const firstItem = ul.querySelector(".route-item");
+                if (firstItem) firstItem.focus();
             }
         }
 
@@ -847,6 +873,47 @@
             if (e.key === "Escape" && isOpen) {
                 toggleMenu();
             }
+            // Cmd+K or Ctrl+K to toggle
+            if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+                e.preventDefault();
+
+                // If minimized, expand first, then open menu
+                if (isMinimized) {
+                    toggleMinimize();
+                    // Wait for expansion slightly or just call toggleMenu?
+                    // toggleMinimize is sync, but transitions are async. Logic-wise it works.
+                    // Open menu immediately to feel responsive.
+                    setTimeout(() => toggleMenu(false), 50);
+                    return;
+                }
+
+                // If open, close. If closed, open and focus LIST (false).
+                if (isOpen) {
+                    toggleMenu();
+                } else {
+                    toggleMenu(false);
+                }
+            }
+        });
+
+        // List Navigation
+        ul.addEventListener("keydown", (e) => {
+            // Use shadow.activeElement because we are in Shadow DOM
+            const active = shadow.activeElement;
+            if (!active || !active.classList.contains("route-item")) return;
+
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                const next = active.nextElementSibling;
+                if (next) next.focus();
+            } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                const prev = active.previousElementSibling;
+                if (prev) prev.focus();
+            } else if (e.key === "Enter") {
+                e.preventDefault();
+                active.click();
+            }
         });
 
         function renderList(items) {
@@ -866,6 +933,7 @@
             items.forEach((item) => {
                 const li = document.createElement("li");
                 li.className = "route-item";
+                li.tabIndex = 0; // Make focusable
 
                 // Highlight active route (parameter aware matching)
                 if (isRouteMatch(item.path, currentUrl)) {
@@ -905,12 +973,18 @@
                         const newPath = prompt(TEXT.paramPrompt, routePath);
                         if (newPath !== null) {
                             router.navigateByUrl(newPath);
-                            // Re-render to update highlight after navigation
-                            setTimeout(() => renderList(items), 100);
+                            // Re-render to update highlight and focus active item
+                            setTimeout(() => {
+                                renderList(items);
+                                focusActiveItem();
+                            }, 100);
                         }
                     } else {
                         router.navigateByUrl(routePath);
-                        setTimeout(() => renderList(items), 100);
+                        setTimeout(() => {
+                            renderList(items);
+                            focusActiveItem();
+                        }, 100);
                     }
                 };
                 ul.appendChild(li);
