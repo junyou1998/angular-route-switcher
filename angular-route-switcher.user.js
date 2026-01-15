@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Angular Route Switcher
 // @namespace    https://github.com/junyou1998/angular-route-switcher
-// @version      1.4.3
+// @version      1.4.4
 // @description      Automatically detects Angular routes and provides a floating UI to switch between them. Works only in Dev Mode (requires window.ng).
 // @description:zh-TW 自動偵測 Angular 路由並提供浮動介面進行切換。僅適用於開發模式 (需要 window.ng)。
 // @author       junyou
@@ -143,6 +143,39 @@
         });
 
         return Array.from(unique.values());
+    }
+
+    // Helper: Check if a route path definition matches the current URL
+    function isRouteMatch(routeDefinition, currentUrl) {
+        // Remove leading slash for consistency
+        const def = routeDefinition.startsWith("/")
+            ? routeDefinition.slice(1)
+            : routeDefinition;
+        const url = currentUrl.split("?")[0].startsWith("/")
+            ? currentUrl.split("?")[0].slice(1)
+            : currentUrl.split("?")[0];
+
+        if (def === url) return true;
+
+        const defSegments = def.split("/");
+        const urlSegments = url.split("/");
+
+        if (defSegments.length !== urlSegments.length) return false;
+
+        for (let i = 0; i < defSegments.length; i++) {
+            const defSeg = defSegments[i];
+            const urlSeg = urlSegments[i];
+
+            // If segment starts with ':', it's a parameter, so it matches anything non-empty
+            if (defSeg.startsWith(":")) {
+                if (!urlSeg) return false; // Parameter cannot be empty? actually url split won't give empty unless //
+                continue;
+            }
+
+            if (defSeg !== urlSeg) return false;
+        }
+
+        return true;
     }
 
     function initAngularContext() {
@@ -434,6 +467,36 @@
                 border: none;
                 padding: 0;
             }
+            .route-item {
+                position: relative; /* For copy button positioning */
+            }
+            .route-item.active {
+                background-color: ${CONFIG.colors.primaryLight};
+                color: ${CONFIG.colors.primary};
+                font-weight: bold;
+                border-left: 4px solid ${CONFIG.colors.primary};
+            }
+            .copy-btn {
+                position: absolute;
+                right: 10px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: none;
+                border: none;
+                cursor: pointer;
+                color: #aaa;
+                display: none; /* Show on hover */
+                padding: 4px;
+                border-radius: 4px;
+                transition: color 0.2s, background 0.2s;
+            }
+            .route-item:hover .copy-btn {
+                display: flex;
+            }
+            .copy-btn:hover {
+                color: ${CONFIG.colors.primary};
+                background-color: rgba(0,0,0,0.05);
+            }
         `;
 
         const backdrop = document.createElement("div");
@@ -536,7 +599,6 @@
         document.body.appendChild(container);
 
         let isOpen = false;
-        // isMinimized is already defined above
 
         // --- Persistence Helper ---
         function saveState() {
@@ -594,8 +656,12 @@
         }
 
         // --- Resize Logic ---
+        let resizeTimeout;
         window.addEventListener("resize", () => {
-            repositionOnResize();
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                repositionOnResize();
+            }, 100);
         });
 
         function repositionOnResize() {
@@ -652,25 +718,31 @@
         function drag(e) {
             if (!isDragging) return;
 
-            const clientX = e.type.includes("touch")
-                ? e.touches[0].clientX
-                : e.clientX;
-            const clientY = e.type.includes("touch")
-                ? e.touches[0].clientY
-                : e.clientY;
+            // Use requestAnimationFrame for smoother performance
+            requestAnimationFrame(() => {
+                const clientX = e.type.includes("touch")
+                    ? e.touches[0].clientX
+                    : e.clientX;
+                const clientY = e.type.includes("touch")
+                    ? e.touches[0].clientY
+                    : e.clientY;
 
-            const dx = clientX - startX;
-            const dy = clientY - startY;
+                const dx = clientX - startX;
+                const dy = clientY - startY;
 
-            if (Math.abs(dx) > dragThreshold || Math.abs(dy) > dragThreshold) {
-                hasMoved = true;
-            }
+                if (
+                    Math.abs(dx) > dragThreshold ||
+                    Math.abs(dy) > dragThreshold
+                ) {
+                    hasMoved = true;
+                }
 
-            let newLeft = initialFabLeft + dx;
-            let newTop = initialFabTop + dy;
+                let newLeft = initialFabLeft + dx;
+                let newTop = initialFabTop + dy;
 
-            fab.style.left = `${newLeft}px`;
-            fab.style.top = `${newTop}px`;
+                fab.style.left = `${newLeft}px`;
+                fab.style.top = `${newTop}px`;
+            });
         }
 
         function dragEnd(e) {
@@ -789,16 +861,43 @@
                 return;
             }
 
+            const currentUrl = router ? router.url : "";
+
             items.forEach((item) => {
                 const li = document.createElement("li");
                 li.className = "route-item";
+
+                // Highlight active route (parameter aware matching)
+                if (isRouteMatch(item.path, currentUrl)) {
+                    li.classList.add("active");
+                }
 
                 let content = `<div class="route-path">/${item.path}</div>`;
                 if (item.title) {
                     content += `<div class="route-title">${item.title}</div>`;
                 }
 
+                const copyBtn = document.createElement("button");
+                copyBtn.className = "copy-btn";
+                copyBtn.title = "Copy Path";
+                copyBtn.innerHTML =
+                    '<span class="material-symbols-outlined" style="font-size: 18px;">content_copy</span>';
+                copyBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    const textToCopy = "/" + item.path;
+                    navigator.clipboard.writeText(textToCopy).then(() => {
+                        // Quick toast or feedback
+                        const originalIcon = copyBtn.innerHTML;
+                        copyBtn.innerHTML =
+                            '<span class="material-symbols-outlined" style="font-size: 18px; color: green;">check</span>';
+                        setTimeout(() => {
+                            copyBtn.innerHTML = originalIcon;
+                        }, 1000);
+                    });
+                };
+
                 li.innerHTML = content;
+                li.appendChild(copyBtn);
 
                 li.onclick = () => {
                     const routePath = item.path;
@@ -806,9 +905,12 @@
                         const newPath = prompt(TEXT.paramPrompt, routePath);
                         if (newPath !== null) {
                             router.navigateByUrl(newPath);
+                            // Re-render to update highlight after navigation
+                            setTimeout(() => renderList(items), 100);
                         }
                     } else {
                         router.navigateByUrl(routePath);
+                        setTimeout(() => renderList(items), 100);
                     }
                 };
                 ul.appendChild(li);
