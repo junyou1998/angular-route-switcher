@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Angular Route Switcher
 // @namespace    https://github.com/junyou1998/angular-route-switcher
-// @version      1.4.5
+// @version      1.4.6
 // @description      Automatically detects Angular routes and provides a floating UI to switch between them. Works only in Dev Mode (requires window.ng).
 // @description:zh-TW 自動偵測 Angular 路由並提供浮動介面進行切換。僅適用於開發模式 (需要 window.ng)。
 // @author       junyou
@@ -648,7 +648,6 @@
             if (isOpen) toggleMenu(); // Close menu if open
 
             isMinimized = !isMinimized;
-            saveState(); // Save state
 
             if (isMinimized) {
                 fab.classList.add("minimized");
@@ -658,6 +657,7 @@
                 fab.classList.remove("minimized");
                 snapToEdge();
             }
+            saveState(); // Save state AFTER snapping to new position
         }
 
         // --- Resize Logic ---
@@ -808,7 +808,7 @@
 
             if (isOpen) {
                 // Use style properties for target position to avoid animation artifacts
-                // rect would return the mid-transition position
+
                 const fabLeft = parseFloat(fab.style.left);
                 const fabTop = parseFloat(fab.style.top);
                 adjustMenuPosition(fabLeft, fabTop);
@@ -880,9 +880,6 @@
                 // If minimized, expand first, then open menu
                 if (isMinimized) {
                     toggleMinimize();
-                    // Wait for expansion slightly or just call toggleMenu?
-                    // toggleMinimize is sync, but transitions are async. Logic-wise it works.
-                    // Open menu immediately to feel responsive.
                     setTimeout(() => toggleMenu(false), 50);
                     return;
                 }
