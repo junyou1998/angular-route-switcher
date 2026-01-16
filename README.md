@@ -8,6 +8,8 @@
 
 **Angular Route Switcher** 是一個專為 Angular 開發者設計的 UserScript 工具。<br>它能自動偵測應用程式中的路由，並提供一個可拖曳的懸浮介面，讓您快速切換頁面。
 
+![Demo](screenshot.gif)
+
 ---
 
 ### ✨ Features / 核心功能
@@ -36,6 +38,25 @@
     <br> [Install from GreasyFork / 前往 GreasyFork 安裝](https://greasyfork.org/scripts/562323-angular-route-switcher)
 3.  Open your local Angular application (e.g., `http://localhost:4200`).
     <br> 開啟您的本機 Angular 應用程式（例如 `http://localhost:4200`）。
+
+### ⚠️ Important Setup / 重要設定
+
+> **Crucial for Router Detection / 路由偵測的重要設定**
+>
+> To ensure the script detects the Angular Router correctly, you **MUST** expose the router in your root component (e.g., `app.component.ts`).
+> <br> 為了確保腳本能正確偵測 Angular Router，您 **必須** 在根元件（例如 `app.component.ts`）中將 router 暴露出來。
+>
+> **Recommended Code / 推薦寫法**:
+>
+> ```typescript
+> export class AppComponent {
+>     // ✅ Publicly expose the router using inject / 使用 inject 公開暴露 router
+>     router = inject(Router);
+> }
+> ```
+>
+> Using `private` or constructor injection without exposing it as a public property may cause detection failure.
+> <br> 若使用 `private` 或建構式注入而未將其公開，可能會導致偵測失敗。
 
 ### 🎮 Usage / 使用說明
 
